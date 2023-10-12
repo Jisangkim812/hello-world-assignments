@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Circles Webcam</title>
+</head>
+<body>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const pixelSize = 20; // Set the desired pixel size
+        const mouseEffectSize = 40; // Set the size of the area affected by the mouse
+        let circles = [];
+
+        const greenColor = 'rgb(0,255,0)'; // Initial green color
+        const tailDuration = 1000; // Tail duration in milliseconds
+
+        function drawCircles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < circles.length; i++) {
+                ctx.beginPath();
+                ctx.arc(circles[i].x, circles[i].y, circles[i].radius, 0, Math.PI * 2);
+                ctx.fillStyle = circles[i].color;
+                ctx.fill();
+            }
+        }
+
+        function sampleColor(x, y) {
+            const pixelData = ctx.getImageData(x, y, 1, 1).data;
+            return `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+        }
+
+        function changeBackgroundColor() {
+            const randomColor = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+            document.body.style.backgroundColor = randomColor;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error('Error accessing the webcam:', err);
+            });
+
+        video.addEventListener('play', () => {
+            setInterval(() => {
+                if (!video.paused && !video.ended) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    circles = []; // Clear existing circles
+
+                    for (let y = 0; y < canvas.height; y += pixelSize) {
+                        for (let x = 0; x < canvas.width; x += pixelSize) {
+                            const color = sampleColor(x + pixelSize / 2, y + pixelSize / 2);
+                            
+                            circles.push({
+                                x: x + pixelSize / 2,
+                                y: y + pixelSize / 2,
+                                radius: pixelSize / 2,
+                                color: color,
+                                tailTime: 0 // Initialize tail time
+                            });
+                        }
+                    }
+
+                    drawCircles();
+                }
+            }, 30);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX - canvas.offsetLeft;
+            const mouseY = e.clientY - canvas.offsetTop;
+
+            for (let i = 0; i < circles.length; i++) {
+                const circle = circles[i];
+                const distance = Math.sqrt((mouseX - circle.x) ** 2 + (mouseY - circle.y) ** 2);
+
+                if (distance < mouseEffectSize / 2) {
+                    circle.color = greenColor; // Change color to green when mouse is inside the circle
+                    circle.tailTime = Date.now() + tailDuration; // Set effect end time
+                    changeBackgroundColor(); // Change background color
+                }
+            }
+
+            drawCircles();
+        });
+
+        function updateTail() {
+            const currentTime = Date.now();
+
+            for (let i = 0; i < circles.length; i++) {
+                if (circles[i].tailTime > currentTime) {
+                    circles[i].color = greenColor; // Continue effect
+                } else {
+                    circles[i].color = sampleColor(circles[i].x, circles[i].y); // Effect ends
+                }
+            }
+
+            drawCircles();
+
+            requestAnimationFrame(updateTail);
+        }
+
+        updateTail();
+    </script>
+</body>
+</html>
