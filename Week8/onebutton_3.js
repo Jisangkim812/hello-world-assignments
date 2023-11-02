@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var ctx = canvas.getContext('2d');
 
     canvas.width = window.innerWidth - 400;
-    canvas.height = window.innerHeight - 700;
+    canvas.height = window.innerHeight - 200;
 
     var score = 0;
     var lives = 3;
@@ -39,15 +39,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     class Building {
         constructor() {
-            this.width = 50;
-            this.height = 100;
+            this.width = 30;
+            this.height = 70;
             this.x = canvas.width;
             this.y = canvas.height - this.height - groundHeight;
             this.passed = false;
             this.image = buildingImages[Math.floor(Math.random() * buildingImages.length)];
         }
         draw() {
-            var halfHeight = this.height / 2;
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         }
         update() {
@@ -101,10 +100,9 @@ document.addEventListener("DOMContentLoaded", function() {
         buildingArray = [];
         spider.x = 50;
         spider.y = canvas.height - spider.height - groundHeight; // Reset the spider's y position to the ground
-        spider.velocity = 0; // Reset velocity
         gameOver = false;
         timer = 0; // Reset the timer as well to restart the building generation
-        requestAnimationFrame(frame); // Make sure this is the last thing you call after all reset operations
+        requestAnimationFrame(frame);
     }
 
     function displayGameOver() {
@@ -121,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function() {
             requestAnimationFrame(frame);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#121212';
+            ctx.fillStyle = '#0074fe';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.fillStyle = 'white';
@@ -134,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             spider.draw();
 
-            ctx.fillStyle = 'darkbrown';
+            ctx.fillStyle = 'brown';
             ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
 
             buildingArray.forEach(function(building, index) {
@@ -174,16 +172,14 @@ document.addEventListener("DOMContentLoaded", function() {
     var timer = 0;
 
     document.addEventListener('keydown', function(event) {
-        if (event.code === 'Space') {
+        if (event.code === 'Space' && spider.y >= canvas.height - spider.height - groundHeight) {
             if (gameOver) {
                 resetGame();
-            } else if (spider.y >= canvas.height - spider.height - groundHeight) {
-                jumping = true;
+            } else {
+                jumping = true; // 
             }
         }
     });
-    
 
     frame();
 });
-
